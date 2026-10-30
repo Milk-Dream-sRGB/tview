@@ -3,7 +3,7 @@
 A small band above the prompt in the Claude desktop app: your limits, context and cache at a glance.
 
 <p align="center">
-  <img src="docs/band.png" alt="The tview band above the prompt in the Claude desktop app" width="780">
+  <img src="docs/social-preview.png" alt="tview: limits, context and cache at a glance, above the prompt in the Claude desktop app" width="780">
 </p>
 
 | | | | |
