@@ -1,0 +1,13 @@
+{
+  "name": "tview",
+  "owner": {
+    "name": "Aleksey Novoselov"
+  },
+  "description": "A compact band above the prompt in the Claude desktop app: limits, context and cache numbers, with quiet statistics.",
+  "plugins": [
+    {
+      "name": "tview",
+      "source": "./"
+    }
+  ]
+}
