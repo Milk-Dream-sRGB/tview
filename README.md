@@ -15,6 +15,8 @@ Author: Aleksey Novoselov
 
 The terminal glyph form: `◔ 16% ↺ 3 ○ 70k ◉ 139k ✎ 705 ↑ 4 ↓ 869 △ 59 ◑ 52%`.
 
+How to read the numbers and what to do about them: [CACHE_GUIDE.md](CACHE_GUIDE.md).
+
 ## Icons
 
 Vector icons of one family (16 px grid, 1.5 px stroke, the unfilled part at 28%), drawn by the desktop app. Where the surface draws no vectors (the terminal) the old glyphs come back; the third column shows them.
