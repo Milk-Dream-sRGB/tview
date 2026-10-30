@@ -4,6 +4,10 @@ A minimal band above the prompt in the Claude desktop app. It shows your limits 
 
 Author: Aleksey Novoselov
 
+<p align="center">
+  <img src="docs/band.png" alt="The tview band above the prompt in the Claude desktop app" width="780">
+</p>
+
 ```
  5-hour         this chat                                       week
  arc 3%  ····   line · box · snowflake · box · dot · dot   [two lines][stack]   ····  ring 52%
