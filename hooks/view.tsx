@@ -62,12 +62,9 @@ const WEEK_NUMBER_FROM = 0
 // With an icon the item is `value` after an icon box of ICON cells; both widths are counted in cells.
 type Item = { key: string; text: string; color?: string; svg?: string; value?: string; alt?: string; link?: string; dim?: boolean; pad?: boolean }
 const DOT_SLOTS = 2
-// 0.54.10: 4 cells (was 3): on the user's screen a 3-cell box was no wider than the 16 px icon and the number stood against it
-const ICON = 4
-// The icon box in cells: an icon with a value has a gap before it, an icon alone needs none
-// The two limits (round icons with a percent) stand a cell closer to their number: the user found the gap too big (0.54.13)
-const TIGHT = new Set(['five', 'week'])
-const boxOf = (it: { key?: string; value?: string }) => (it.value && !TIGHT.has(it.key ?? '') ? ICON : ICON - 1)
+// 0.54.24: 3 cells for every icon (4 before, 0.54.10): the numbers stood too far from their icons, the limits had it right since 0.54.13
+const ICON = 3
+const boxOf = (_it?: { key?: string; value?: string }) => ICON
 // A blank that survives a trim (a non-breaking space does not), so a Button over an icon keeps its width
 const BLANK = '\u2800'
 const withIcon = (key: string, glyphText: string, svg: string, value: string | undefined, alt: string, on: boolean, color?: string, dim?: boolean): Item =>
@@ -170,6 +167,13 @@ export function renderBand({ Box, Text, Button, Svg }: BandUi, v: BandInput, act
       </Box>
     </Box>
   )
+  // The icon is the button, the value stands after it as plain text: the same centred press zone as `short`
+  const pressableValue = (it: Item, onPress: () => void) => (
+    <Box key={it.key} columnGap={0}>
+      {pressable(it, onPress)}
+      {it.value ? <Text wrap="truncate" color={it.dim ? DIM_TEXT : it.color}>{it.value}</Text> : null}
+    </Box>
+  )
   // An item that keeps its value on screen and takes the press over all of it: a transparent Button lies over the whole box
   const overValue = (it: Item, onPress: () => void) => (
     <Box key={it.key} height={1}>
@@ -185,7 +189,7 @@ export function renderBand({ Box, Text, Button, Svg }: BandUi, v: BandInput, act
   const node = (it: Item) =>
     isSep(it) || it.pad ? <Box key={it.key} width={[...it.text].length} height={1} />
     : it.key === 'short' ? (vector(it) ? pressable(it, act.toggleShort) :<Button key="short" plain label={it.text} onPress={act.toggleShort} />)
-    : it.key === 'five' || it.key === 'week' ? overValue(it, act.refresh)
+    : it.key === 'five' ? (vector(it) ? pressableValue(it, act.refresh) : overValue(it, act.refresh))
     : it.link && vector(it) ? pressable({ ...it, key: `go${it.key}` }, () => act.open(it.link as string))
     : it.link
       ? (
