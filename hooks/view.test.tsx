@@ -25,7 +25,7 @@ const input = (over: Partial<BandInput> = {}): BandInput => ({
   ...over,
 })
 const calls: string[] = []
-const acts = { toggleShort: () => void calls.push('short'), open: (l: string) => void calls.push(`open ${l}`) }
+const acts = { toggleShort: () => void calls.push('short'), open: (l: string) => void calls.push(`open ${l}`), refresh: () => void calls.push('refresh') }
 const draw = (over: Partial<BandInput> = {}) => renderBand(fakeUi, input(over), acts)
 
 test('band: every item of a roomy band is drawn with its value', () => {
@@ -33,7 +33,7 @@ test('band: every item of a roomy band is drawn with its value', () => {
   for (const want of ['◔ 25%', '↺ 2', '○ 106k', '⋯ 17', '◉ 825k', '✎ 10k', '↓ 5k', '△ 50', '◑ 62%']) {
     expect(texts).toContain(want.replace(/ /g, ' '))
   }
-  expect(buttons(draw()).map(b => b.props.key)).toEqual(['short'])
+  expect(buttons(draw()).map(b => b.props.key)).toEqual(['five', 'short', 'week'])
   expect(texts).toContain('≡ 68/19')
 })
 
@@ -48,6 +48,13 @@ test('band: new input shows only when it is unusually large, requests of the tur
   // a record saved before the count existed shows a dash, not a wrong number
   expect(found('⋯', tk(4))).toBe('⋯ —')
   expect(found('⋯', tk(4, 1))).toBe('⋯ 1')
+})
+
+test('band: pressing a limit refreshes the limits', () => {
+  calls.length = 0
+  ;(button(draw(), 'five')?.props.onPress as () => void)()
+  ;(button(draw(), 'week')?.props.onPress as () => void)()
+  expect(calls).toEqual(['refresh', 'refresh'])
 })
 
 test('band: the short button shows its state, and pressing runs the actions', () => {
@@ -167,7 +174,7 @@ test('band: with Svg the icons are drawn as vectors and the presses are kept', (
   expect(shown(tree)).toContain('62%')
   // the countdown and the cache timer have no digits any more
   expect(shown(tree).some(t => /^[↺△]/.test(t))).toBe(false)
-  expect(buttons(tree).map(b => b.props.key)).toEqual(['short'])
+  expect(buttons(tree).map(b => b.props.key)).toEqual(['five', 'short', 'week'])
   calls.length = 0
   ;(button(tree, 'short')?.props.onPress as () => void)()
   expect(calls).toEqual(['short'])
@@ -183,7 +190,7 @@ test('band: the context icon turns pale orange from 200k and red from 400k, the 
 })
 
 test('band: the snowflake is not a button, and without Svg the cache stays a plain glyph', () => {
-  expect(buttons(draw()).map(b => b.props.key)).toEqual(['short'])
+  expect(buttons(draw()).map(b => b.props.key)).toEqual(['five', 'short', 'week'])
 })
 
 test('band: the token icons do not come and go with the digits of the numbers', () => {

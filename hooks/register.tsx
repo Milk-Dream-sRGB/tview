@@ -99,26 +99,29 @@ async function restore($: EngineInterface) {
   return saved.images != null && saved.turns != null
 }
 
-// The limits belong to the account, not to a chat: the last reading is kept under one shared key so a chat
-// opened now shows them at once, before its first turn brings a measurement. A window that has already
-// reset counts as empty: nothing is spent in a window that has not begun, so a cold start shows 0% and not nothing.
+// The limits belong to the account, not to a chat: the last reading is kept under one shared key, written by
+// whichever chat measured last. A chat reads it when it opens and when the band is pressed, and takes it when
+// it differs from what is shown. A window that has already reset counts as empty: nothing is spent in a window
+// that has not begun, so a cold start shows 0% and not nothing.
+const differs = (a: Limit | null, b: Limit) => a === null || a.percent !== b.percent || a.resetsAt !== b.resetsAt
+
 async function restoreLimits($: EngineInterface) {
   const saved = (await $.store.get('last:limits')) as { five?: Limit | null; week?: Limit | null } | undefined
   if (!saved) return
   const t = Date.now()
   const alive = (l: Limit | null | undefined) => (!l ? null : !l.resetsAt || Date.parse(l.resetsAt) > t ? l : { percent: 0 })
-  if (await read($, five) === null) await update($, five, () => alive(saved.five))
-  if (await read($, week) === null) await update($, week, () => alive(saved.week))
+  const f = alive(saved.five)
+  const w = alive(saved.week)
+  if (f && differs(await read($, five), f)) await update($, five, () => f)
+  if (w && differs(await read($, week), w)) await update($, week, () => w)
 }
 
-// The limits the engine knows right now (what `session.measure` pushes). Used where no measure arrives by
-// itself: a chat just opened, and a check every five minutes. Empty figures change nothing.
+// The limits the engine knows right now (what `session.measure` pushes). Used once, in a chat just opened
+// when no chat has saved a reading yet. Empty figures change nothing.
 async function seedLimits($: EngineInterface) {
   const u = await $.session.usage()
   const f = toLimit(u.rateLimits.find(r => r.kind === 'five_hour'))
   const w = toLimit(u.rateLimits.find(r => r.kind === 'seven_day'))
-  // Written only when it differs from what is shown, so a check that finds nothing new redraws nothing
-  const differs = (a: Limit | null, b: Limit) => a === null || a.percent !== b.percent || a.resetsAt !== b.resetsAt
   if (f && differs(await read($, five), f)) await update($, five, () => f)
   if (w && differs(await read($, week), w)) await update($, week, () => w)
 }
@@ -337,9 +340,6 @@ export const register: Register = on => {
       tick(() => read($, trouble).then(t => (t.others ? refreshOthers($) : undefined)))
     })
     $.clock.every(120_000, () => tick(() => refreshOthers($)))
-    // The limits move between turns too (other chats, the app's own refresh); a check every five minutes
-    // keeps the band close to the app
-    $.clock.every(300_000, () => tick(() => seedLimits($)))
     await statSetup($)
     const savedDay = await $.store.get('renew:day')
     await update($, renewDay, () => (typeof savedDay === 'number' ? savedDay : null))
@@ -351,7 +351,7 @@ export const register: Register = on => {
     }
     // A new chat has no measurement yet: show the last known limits and what the engine reads now
     await restoreLimits($).catch(() => undefined)
-    await seedLimits($).catch(() => undefined)
+    if ((await read($, five)) === null && (await read($, week)) === null) await seedLimits($).catch(() => undefined)
     // Always asked: a record saved by an older version may hold a wrong figure (10k after a compaction)
     void seedContext($, false).catch(() => undefined)
     await refreshOthers($)
@@ -482,6 +482,8 @@ export const register: Register = on => {
     lastBand = `columns ${e.props.bodyColumns}, fits ${info.fits}, shown: ${[...info.left, ...info.middle, ...info.right].map(i => i.key).join(',')}`
     const band = renderBand({ ...ui, Svg: 'Svg' in ui ? ui.Svg : undefined } as never, data, {
       toggleShort: () => void update($, brief, v => !v),
+      // The limits are shared by all chats: pressing one takes the last reading any chat saved
+      refresh: () => void restoreLimits($).catch(() => undefined),
       // Windows sets OS=Windows_NT; macOS does not set it. If `OS` is not given, the Windows variables
       // tell the same (`ComSpec`, `SystemRoot`); a failed start is kept for /tview debug, not thrown
       open: link => void guarded($, 'open', async () => {

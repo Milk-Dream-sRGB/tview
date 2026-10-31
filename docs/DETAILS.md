@@ -156,6 +156,7 @@ Hooks and everything that talks to the engine (`$`) live in one file; the rest i
 - `hooks/shared.ts` — the colours, the `short` prompt, the cache lifetime, the language type.
 - `types/index.d.ts` — the state types.
 - Whatever the engine draws in this place by itself (for example a mascot) stays above the band.
+- Limits are shared by all chats through one saved reading (written after each turn). A chat takes it when it opens and when you press the 5-hour or weekly limit; nothing polls it.
 - Data sources: `session.measure` (limits and context), `turn.complete` (a turn's tokens), `agent.spawn` and a subagent's `turn.complete` (the `◈` icon), a timer every minute (countdowns and the agent list check), the app's chat list every two minutes (the dots).
 - Drawn in `AbovePrompt` as three groups: left, middle (in the true centre) and right. Left: 5h limit, reset, a gap, `short`. Middle: context, turns, the snowflake, agents. Right: cache read and write, input, output, a gap, the other chats' places (two always kept), a gap, the weekly limit. The width is taken from the band's real width.
 - Narrow window guard: if the two groups do not fit, the excess is removed whole, not cut with an ellipsis. Order: new input, requests, output, cache write, cache read, stack, `short`, snowflake, orbit, context. The limits, the dots and the weekly limit always stay.

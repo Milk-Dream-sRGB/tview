@@ -25,7 +25,7 @@ export type BandInput = {
 }
 // `Svg` exists on the desktop only; without it the glyph in `text` is drawn
 type BandUi = ClientElements & { Svg?: ElementConstructor<SvgProps> }
-type BandActions = { toggleShort: () => void; open: (link: string) => void }
+type BandActions = { toggleShort: () => void; open: (link: string) => void; refresh: () => void }
 
 // 5-hour limit: green up to 5% (a fresh window), the usual colour from 6 to 95, red from 96
 const alert = (p: number) => (Math.round(p) >= 96 ? PALE_RED : Math.round(p) <= 5 ? DOT_GREEN : undefined)
@@ -170,12 +170,22 @@ export function renderBand({ Box, Text, Button, Svg }: BandUi, v: BandInput, act
       </Box>
     </Box>
   )
+  // An item that keeps its value on screen and takes the press over all of it: a transparent Button lies over the whole box
+  const overValue = (it: Item, onPress: () => void) => (
+    <Box key={it.key} height={1}>
+      {plain({ ...it, key: `${it.key}v` })}
+      <Box position="absolute" top={0} left={0} right={0} height={1}>
+        <Button key={it.key} plain label={BLANK} onPress={onPress} />
+      </Box>
+    </Box>
+  )
   const plain = (it: Item) => (it.svg && Svg ? icon(it) : <Text key={it.key} wrap="truncate" color={it.dim ? DIM_TEXT : it.color}>{it.text}</Text>)
   const vector = (it: Item) => Boolean(it.svg && Svg)
   // Gaps and the free places for dots are empty boxes: spaces in a text could be trimmed
   const node = (it: Item) =>
     isSep(it) || it.pad ? <Box key={it.key} width={[...it.text].length} height={1} />
     : it.key === 'short' ? (vector(it) ? pressable(it, act.toggleShort) :<Button key="short" plain label={it.text} onPress={act.toggleShort} />)
+    : it.key === 'five' || it.key === 'week' ? overValue(it, act.refresh)
     : it.link && vector(it) ? pressable({ ...it, key: `go${it.key}` }, () => act.open(it.link as string))
     : it.link
       ? (
