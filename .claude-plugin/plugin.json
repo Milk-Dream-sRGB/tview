@@ -1,6 +1,6 @@
 {
   "name": "tview",
-  "version": "0.54.24",
+  "version": "0.54.25",
   "description": "A band above the prompt: context tokens and the 5-hour and weekly limits. The asterisk is the cache timer. Press the 5-hour limit to refresh the data, the parallel lines to make the answer as short as possible.",
   "types": "./types/index.d.ts",
   "author": {

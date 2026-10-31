@@ -60,16 +60,20 @@ const WEEK_NUMBER_FROM = 0
 
 // A band item. `svg` is the vector icon (desktop), `text` the glyph row drawn when there is no `Svg`.
 // With an icon the item is `value` after an icon box of ICON cells; both widths are counted in cells.
-type Item = { key: string; text: string; color?: string; svg?: string; value?: string; alt?: string; link?: string; dim?: boolean; pad?: boolean }
+type Item = { key: string; text: string; color?: string; svg?: string; value?: string; alt?: string; link?: string; dim?: boolean; pad?: boolean; trail?: number }
 const DOT_SLOTS = 2
 // 0.54.24: 3 cells for every icon (4 before, 0.54.10): the numbers stood too far from their icons, the limits had it right since 0.54.13
 const ICON = 3
 const boxOf = (_it?: { key?: string; value?: string }) => ICON
+// 0.54.25: a value is followed by one more blank than the plain gap, so a number reads with its own icon and not the next one
+// (a dash between two icons belonged to neither). The two limits keep the plain gap.
+const TRAIL = 1
 // A blank that survives a trim (a non-breaking space does not), so a Button over an icon keeps its width
 const BLANK = '\u2800'
+const trailOf = (key: string, value: string | undefined) => (value && key !== 'five' && key !== 'week' ? TRAIL : 0)
 const withIcon = (key: string, glyphText: string, svg: string, value: string | undefined, alt: string, on: boolean, color?: string, dim?: boolean): Item =>
   on
-    ? { key, text: `${NB.repeat(boxOf({ key, value }))}${value ?? ''}`, color, svg: dim ? dimmed(svg) : svg, value, alt, dim }
+    ? { key, text: `${NB.repeat(boxOf({ key, value }))}${value ?? ''}${NB.repeat(trailOf(key, value))}`, color, svg: dim ? dimmed(svg) : svg, value, alt, dim, trail: trailOf(key, value) }
     : { key, text: glyphText, color, dim }
 // A token item: the number is drawn as long as it is (even gaps), but the item's `text` keeps TOKEN_W cells
 // in reserve, so the fit does not change with the digits (0.54.8: the padding used to be drawn, and the gaps
@@ -152,6 +156,7 @@ export function renderBand({ Box, Text, Button, Svg }: BandUi, v: BandInput, act
     <Box key={it.key} columnGap={0}>
       <Box width={boxOf(it)} height={1} flexShrink={0}>{Svg && it.svg ? <Svg source={it.svg} alt={it.alt ?? ''} width={16} height={16} /> : null}</Box>
       {it.value ? <Text wrap="truncate" color={it.dim ? DIM_TEXT : it.color}>{it.value}</Text> : null}
+      {it.trail ? <Box width={it.trail} height={1} flexShrink={0} /> : null}
     </Box>
   )
   // A pressable icon (short, the other chats' marks): the box is as wide as an icon box, and the icon and the Button
