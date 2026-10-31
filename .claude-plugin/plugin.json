@@ -1,6 +1,6 @@
 {
   "name": "tview",
-  "version": "0.54.22",
+  "version": "0.54.23",
   "description": "Compact band of vector icons above the prompt: 5h limit, reset, weekly limit, context, cache tokens and cache timer, short-answer toggle, turns, other chats; quiet statistics on /tview",
   "types": "./types/index.d.ts",
   "author": {
